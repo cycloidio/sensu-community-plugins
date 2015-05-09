@@ -119,6 +119,14 @@ class MongoDB < Sensu::Plugin::Metric::CLI::Graphite
     server_metrics = {}
     server_metrics['lock.ratio'] = "#{sprintf('%.5f', server_status['globalLock']['ratio'])}" unless server_status['globalLock']['ratio'].nil?
 
+    # op metrics
+    server_metrics['op.insert'] = server_status['opcounters']['insert']
+    server_metrics['op.query'] = server_status['opcounters']['query']
+    server_metrics['op.update'] = server_status['opcounters']['update']
+    server_metrics['op.delete'] = server_status['opcounters']['delete']
+    server_metrics['op.getmore'] = server_status['opcounters']['getmore']
+    server_metrics['op.command'] = server_status['opcounters']['command']
+
     server_metrics['lock.queue.total'] = server_status['globalLock']['currentQueue']['total']
     server_metrics['lock.queue.readers'] = server_status['globalLock']['currentQueue']['readers']
     server_metrics['lock.queue.writers'] = server_status['globalLock']['currentQueue']['writers']
