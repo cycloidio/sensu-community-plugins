@@ -99,9 +99,13 @@ class NginxMetrics < Sensu::Plugin::Metric::CLI::Graphite
       end
       if line.match(/^\s+(\d+)\s+(\d+)\s+(\d+)/)
         requests = line.match(/^\s+(\d+)\s+(\d+)\s+(\d+)/).to_a
-        output "#{config[:scheme]}.accepts", requests[1]
-        output "#{config[:scheme]}.handled", requests[2]
-        output "#{config[:scheme]}.requests", requests[3]
+        handled = requests[2]
+        handles = requests[3]
+        reqbysecond = handles.to_i.fdiv(handled.to_i)
+        output "#{config[:scheme]}.accepted", requests[1]
+        output "#{config[:scheme]}.handled", handled
+        output "#{config[:scheme]}.requests", handles
+        output "#{config[:scheme]}.reqbysecond", reqbysecond
       end
       if line.match(/^Reading:\s+(\d+).*Writing:\s+(\d+).*Waiting:\s+(\d+)/)
         queue = line.match(/^Reading:\s+(\d+).*Writing:\s+(\d+).*Waiting:\s+(\d+)/).to_a
