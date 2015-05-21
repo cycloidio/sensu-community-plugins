@@ -59,7 +59,7 @@ class LoadStat < Sensu::Plugin::Metric::CLI::Graphite
 
   def run
     result = `uptime`.gsub(/\s+/m, ' ').strip.split(" ")[-3..-1]
-    result = result.map! {|v| v.gsub('0,', '0.').gsub(',', '')}
+    result = result.map! {|v| v.gsub(',', '').to_f / 100}
 
     timestamp = Time.now.to_i
     if config[:per_core]
