@@ -134,14 +134,16 @@ class MongoDB < Sensu::Plugin::Metric::CLI::Graphite
     server_metrics['connections.current'] = server_status['connections']['current']
     server_metrics['connections.available'] = server_status['connections']['available']
 
-    if server_status['indexCounters']['btree'].nil?
-      server_metrics['indexes.missRatio'] = "#{sprintf('%.5f', server_status['indexCounters']['missRatio'])}"
-      server_metrics['indexes.hits'] = server_status['indexCounters']['hits']
-      server_metrics['indexes.misses'] = server_status['indexCounters']['misses']
-    else
-      server_metrics['indexes.missRatio'] = "#{sprintf('%.5f', server_status['indexCounters']['btree']['missRatio'])}"
-      server_metrics['indexes.hits'] = server_status['indexCounters']['btree']['hits']
-      server_metrics['indexes.misses'] = server_status['indexCounters']['btree']['misses']
+    if server_status['indexCounters'].is_a?(::Hash)
+        if server_status['indexCounters']['btree'].nil?
+          server_metrics['indexes.missRatio'] = "#{sprintf('%.5f', server_status['indexCounters']['missRatio'])}"
+          server_metrics['indexes.hits'] = server_status['indexCounters']['hits']
+          server_metrics['indexes.misses'] = server_status['indexCounters']['misses']
+        else
+          server_metrics['indexes.missRatio'] = "#{sprintf('%.5f', server_status['indexCounters']['btree']['missRatio'])}"
+          server_metrics['indexes.hits'] = server_status['indexCounters']['btree']['hits']
+          server_metrics['indexes.misses'] = server_status['indexCounters']['btree']['misses']
+        end
     end
 
     server_metrics['cursors.open'] = server_status['cursors']['totalOpen']
