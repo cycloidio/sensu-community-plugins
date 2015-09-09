@@ -37,14 +37,20 @@ class JenkinsMetricsPingPongChecker < Sensu::Plugin::Check::CLI
          long: '--server SERVER',
          default: 'localhost'
 
-  option :uri,
-         description: 'Jenkins Metrics Ping URI',
-         short: '-u URI',
-         long: '--uri URI',
-         default: 'metrics/currentUser/ping'
+  option :port,
+         description: 'Jenkins Port',
+         short: '-p PORT',
+         long: '--port PORT',
+         default: '8000'
+
+  option :token,
+         description: 'Metrics token',
+         short: '-t TOKEN',
+         long: '--token TOKEN',
+         default: ''
 
   def run
-    r = RestClient::Resource.new("http://#{config[:server]}:8080/#{config[:uri]}", timeout: 5).get
+    r = RestClient::Resource.new("http://#{config[:server]}:#{config[:port]}/metrics/#{config[:token]}/ping", timeout: 5).get
     if r.code == 200 && r.body.include?('pong')
       ok 'Jenkins Service is up'
     else
