@@ -155,6 +155,10 @@ class CheckHTTP < Sensu::Plugin::Check::CLI
          description: 'Do not use proxy server even from environment http_proxy setting',
          default: false
 
+  option :body,
+         long: '--body BODY',
+         description: 'A Post body'
+
   def run
     if config[:url]
       uri = URI.parse(config[:url])
@@ -215,7 +219,12 @@ class CheckHTTP < Sensu::Plugin::Check::CLI
       end
     end
 
-    req = Net::HTTP::Get.new(config[:request_uri], 'User-Agent' => config[:ua])
+    if config[:body]                                                                                                                                                          
+      req = Net::HTTP::Post.new(config[:request_uri], 'User-Agent' => config[:ua])
+      req.body = config[:body]
+    else
+      req = Net::HTTP::Get.new(config[:request_uri], 'User-Agent' => config[:ua])
+    end
 
     if !config[:user].nil? && !config[:password].nil?
       req.basic_auth config[:user], config[:password]
