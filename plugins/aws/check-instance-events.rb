@@ -94,7 +94,7 @@ class CheckInstanceEvents < Sensu::Plugin::Check::CLI
           #         "not_after": "2015-01-05 18:00:00 UTC"
           #     }
           # ]
-          if i[:events_set].select { |x| x[:code] == 'system-reboot' && x[:description] =~ /\[Completed\]/ }.empty?
+          if i[:events_set].select { |x| (x[:code] == 'system-reboot' || x[:code] == 'instance-stop') && x[:description] =~ /\[Completed\]/ }.empty?
             event_instances << i[:instance_id]
           end
         end
@@ -121,7 +121,7 @@ class CheckInstanceEvents < Sensu::Plugin::Check::CLI
     end
 
     if event_instances.count > 0
-      critical("#{event_instances.count} instances #{event_instances.count > 1 ? 'have' : 'has'} upcoming scheduled events: #{event_instances.join(',')}")
+      warning("#{event_instances.count} instances #{event_instances.count > 1 ? 'have' : 'has'} upcoming scheduled events: #{event_instances.join(',')}")
     else
       ok
     end
