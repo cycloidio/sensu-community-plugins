@@ -1,6 +1,6 @@
 #! /usr/bin/env ruby
 #  encoding: UTF-8
-#   http-json-graphite.rb
+#   metrics-http-json.rb
 #
 # DESCRIPTION:
 #   Hits an HTTP endpoint which emits JSON and pushes data into Graphite.
@@ -16,7 +16,7 @@
 #   gem: rest-client
 #
 # USAGE:
-#   EX: ./http-json-graphite.rb -u 'http://127.0.0.1:8080/jolokia/read/com\
+#   EX: ./metrics-http-json.rb -u 'http://127.0.0.1:8080/jolokia/read/com\
 #   .mchange.v2.c3p0:name=datasource,type=PooledDataSource' -s hostname.c3p0\
 #    -m 'Connections::numConnections,BusyConnections::numBusyConnections'\
 #    -o 'value'
@@ -33,13 +33,14 @@
 #   for details.
 #
 
-require 'rubygems' if RUBY_VERSION < '1.9.0'
 require 'sensu-plugin/metric/cli'
 require 'rest-client'
 require 'socket'
 require 'json'
 require 'uri'
-
+#
+# HttpJsonGraphite - see description above
+#
 class HttpJsonGraphite < Sensu::Plugin::Metric::CLI::Graphite
   option :url,
          description: 'Full URL to the endpoint',
@@ -51,7 +52,7 @@ class HttpJsonGraphite < Sensu::Plugin::Metric::CLI::Graphite
          description: 'Metric naming scheme',
          short: '-s SCHEME',
          long: '--scheme SCHEME',
-         default: "#{Socket.gethostname}"
+         default: Socket.gethostname.to_s
 
   option :metric,
          description: 'Metric/JSON key pair ex:Connections::numConnections',
@@ -64,12 +65,12 @@ class HttpJsonGraphite < Sensu::Plugin::Metric::CLI::Graphite
          long: '--object OBJECT'
 
   def run
-    scheme = "#{config[:scheme]}"
-    metric_pair_input = "#{config[:metric]}"
+    scheme = config[:scheme].to_s
+    metric_pair_input = config[:metric].to_s
     if config[:object]
-      object = "#{config[:object]}"
+      object = config[:object].to_s
     end
-    url = URI.encode("#{config[:url]}")
+    url = URI.encode(config[:url].to_s)
     begin
       r = RestClient.get url
       metric_pair_array = metric_pair_input.split(/,/)
@@ -88,10 +89,10 @@ class HttpJsonGraphite < Sensu::Plugin::Metric::CLI::Graphite
           end
         end
       end
-      rescue Errno::ECONNREFUSED
-        critical "#{config[:url]} is not responding"
-      rescue RestClient::RequestTimeout
-        critical "#{config[:url]} Connection timed out"
+    rescue Errno::ECONNREFUSED
+      critical "#{config[:url]} is not responding"
+    rescue RestClient::RequestTimeout
+      critical "#{config[:url]} Connection timed out"
     end
     ok
   end

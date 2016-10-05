@@ -1,4 +1,4 @@
-#! /usr/bin/env ruby
+#!/usr/bin/env ruby
 #
 #   check-https-cert
 #
@@ -14,7 +14,7 @@
 #
 # DEPENDENCIES:
 #   gem: sensu-plugin
-#   gem: nrt-https
+#   gem: net-https
 #
 # USAGE:
 #   #YELLOW
@@ -27,11 +27,13 @@
 #   for details.
 #
 
-require 'rubygems' if RUBY_VERSION < '1.9.0'
 require 'sensu-plugin/check/cli'
 require 'net/https'
 
-class CheckHTTP < Sensu::Plugin::Check::CLI
+#
+# Check HTTP
+#
+class CheckHttpCert < Sensu::Plugin::Check::CLI
   option :url,
          short: '-u URL',
          long: '--url URL',
@@ -42,19 +44,31 @@ class CheckHTTP < Sensu::Plugin::Check::CLI
          short: '-w',
          long: '--warning DAYS',
          proc: proc(&:to_i),
+         default: 50,
          description: 'Warn EXPIRE days before cert expires'
 
   option :critical,
          short: '-c',
          long: '--critical DAYS',
          proc: proc(&:to_i),
+         default: 25,
          description: 'Critical EXPIRE days before cert expires'
+
+  option :insecure,
+         short: '-k',
+         boolean: true,
+         description: 'Enabling insecure connections',
+         default: false
 
   def run
     uri = URI.parse(config[:url])
     http = Net::HTTP.new(uri.host, uri.port)
     http.use_ssl = true
-    http.verify_mode = OpenSSL::SSL::VERIFY_PEER
+    http.verify_mode = if config[:insecure]
+                         OpenSSL::SSL::VERIFY_NONE
+                       else
+                         OpenSSL::SSL::VERIFY_PEER
+                       end
 
     http.start do |h|
       @cert = h.peer_cert
@@ -72,6 +86,6 @@ class CheckHTTP < Sensu::Plugin::Check::CLI
     end
 
   rescue
-    unknown "Could not connect to #{config[:url]}"
+    critical "Could not connect to #{config[:url]}"
   end
 end
