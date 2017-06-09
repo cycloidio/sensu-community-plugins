@@ -146,8 +146,17 @@ class MongoDB < Sensu::Plugin::Metric::CLI::Graphite
         end
     end
 
-    server_metrics['cursors.open'] = server_status['cursors']['totalOpen']
-    server_metrics['cursors.timedOut'] = server_status['cursors']['timedOut']
+    # Looking on mongodb docs https://docs.mongodb.com/manual/reference/command/serverStatus/
+    # cursors stats have been moved into metrics.
+    # The deprecated node on this field 'deprecated, use server status metrics' have been removed in mongo 3.4.
+    # Adding a backwards compatible fix
+    if server_status.key?('cursors')
+      server_metrics['cursors.open'] = server_status['cursors']['totalOpen']
+      server_metrics['cursors.timedOut'] = server_status['cursors']['timedOut']
+    else
+      server_metrics['cursors.open'] = server_status['metrics']['cursor']['open']['total']
+      server_metrics['cursors.timedOut'] = server_status['metrics']['cursor']['timedOut']
+    end
 
     server_metrics['mem.residentMb'] = server_status['mem']['resident']
     server_metrics['mem.virtualMb'] = server_status['mem']['virtual']
